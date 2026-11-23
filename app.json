@@ -3,14 +3,14 @@
     "name": "AURORA Mail",
     "slug": "aurora-mail",
     "scheme": "aurora-mail",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "default",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle":"dark",
     "ios": {
       "supportsTablet": true,
       "infoPlist": { "CADisableMinimumFrameDurationOnPhone": true }
     },
-    "android": { "adaptiveIcon": { "backgroundColor": "#111318" } },
+    "android": { "adaptiveIcon": { "backgroundColor": "#101116" } },
     "plugins": ["expo-secure-store"]
   }
 }
