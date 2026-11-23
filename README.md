@@ -1,21 +1,21 @@
 # AURORA Mail
 
-A smooth, cross-platform email experience for Android and iOS, built with Expo and React Native.
+A Superhuman-inspired email interface prototype built with Expo and React Native.
 
-## Providers
-
-- Gmail
-- Microsoft Outlook / Microsoft 365
-- Apple Mail
-- FastHost webmail (IMAP/SMTP)
-
-## Getting started
+## Run
 
 ```bash
 npm install
 npx expo start
 ```
 
-## Environment variables
+## Included
 
-Create `.env` from `.env.example` and add provider credentials. Never commit credentials or access tokens.
+- Unified-inbox visual prototype
+- Split-pane inbox and reader
+- Compose modal
+- Command palette
+- Gmail, Outlook, Apple, and FastHost account indicators
+- Responsive narrow/mobile and wide/tablet layouts
+
+Provider authentication and actual IMAP/SMTP synchronization are not yet implemented.

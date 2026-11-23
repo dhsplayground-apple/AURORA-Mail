@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "AURORA Mail",
+    "slug": "aurora-mail",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "splash": { "resizeMode": "contain", "backgroundColor": "#111318" },
+    "ios": { "supportsTablet": true },
+    "android": { "adaptiveIcon": { "backgroundColor": "#111318" } }
+  }
+}
