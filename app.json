@@ -2,6 +2,7 @@
   "expo": {
     "name": "AURORA Mail",
     "slug": "aurora-mail",
+    "scheme": "aurora-mail",
     "version": "1.0.0",
     "orientation": "default",
     "userInterfaceStyle": "automatic",

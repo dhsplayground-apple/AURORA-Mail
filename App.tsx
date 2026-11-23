@@ -1,33 +1,93 @@
-import React, { useState } from 'react';
-import { FlatList, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 
-type Message = { id:number; sender:string; subject:string; preview:string; time:string; unread?:boolean; avatar:string };
-const messages:Message[]=[
-{id:1,sender:'Maya Chen',subject:'Re: Aurora launch',preview:'Everything is ready for the final review. I added the latest figures…',time:'9:42 AM',unread:true,avatar:'MC'},
-{id:2,sender:'Linear',subject:'Issues updated in AURORA',preview:'AURORA-126 moved to Ready for review and 3 issues changed status…',time:'8:15 AM',unread:true,avatar:'L'},
-{id:3,sender:'Noah Williams',subject:'Coffee next week?',preview:'Are you around Tuesday or Wednesday? I would love to catch up…',time:'Yesterday',avatar:'NW'},
-{id:4,sender:'Figma',subject:'12 comments in Aurora Mobile',preview:'Sofia and 4 others left comments in Aurora Mobile / Inbox…',time:'Yesterday',avatar:'F'},
-{id:5,sender:'Cloud Updates',subject:'Your weekly summary',preview:'Storage usage is up 8%. Here is a summary of your workspace…',time:'Mon',avatar:'C'}
-];
+WebBrowser.maybeCompleteAuthSession();
 
-export default function App(){
- const {width}=useWindowDimensions(); const isWide=width>900;
- const [selected,setSelected]=useState(messages[0]); const [compose,setCompose]=useState(false); const [command,setCommand]=useState(false);
- return <SafeAreaView style={s.root}><StatusBar barStyle="light-content"/><View style={s.shell}>
- {isWide&&<View style={s.sidebar}><View style={s.brand}><View style={s.brandMark}><Text style={s.brandMarkText}>A</Text></View><Text style={s.brandText}>AURORA</Text></View>
- <Pressable style={s.compose} onPress={()=>setCompose(true)}><Ionicons name="create-outline" size={18} color="#0d0e12"/><Text style={s.composeText}>Compose</Text><Text style={s.shortcut}>C</Text></Pressable>
- <Nav icon="file-tray-full-outline" label="Inbox" count="12" active/><Nav icon="moon-outline" label="Snoozed"/><Nav icon="time-outline" label="Later"/><Nav icon="send-outline" label="Sent"/><Nav icon="document-text-outline" label="Drafts"/>
- <View style={s.accounts}><Text style={s.sectionLabel}>ACCOUNTS</Text><Account name="Gmail" dot="#4285F4"/><Account name="Outlook" dot="#0078D4"/><Account name="FastHost" dot="#7C5CFC"/></View></View>}
- <View style={[s.inbox,isWide&&s.inboxWithPane]}><View style={s.topbar}><Pressable onPress={()=>setCommand(true)} style={s.search}><Ionicons name="search" size={17} color="#898d99"/><Text style={s.searchText}>Search mail</Text><Text style={s.commandKey}>⌘ K</Text></Pressable><Pressable style={s.iconButton}><Ionicons name="notifications-outline" size={20} color="#aeb2bd"/></Pressable></View>
- <View style={s.listHeader}><View><Text style={s.title}>Inbox</Text><Text style={s.subtitle}>12 unread</Text></View><Pressable style={s.iconButton}><Ionicons name="filter-outline" size={18} color="#aeb2bd"/></Pressable></View>
- <FlatList data={messages} keyExtractor={i=>String(i.id)} contentContainerStyle={s.messageList} renderItem={({item})=><Pressable onPress={()=>setSelected(item)} style={[s.messageRow,selected.id===item.id&&s.messageSelected]}><View style={[s.avatar,item.unread&&s.avatarUnread]}><Text style={s.avatarText}>{item.avatar}</Text></View><View style={s.messageCopy}><View style={s.messageTop}><Text numberOfLines={1} style={[s.sender,item.unread&&s.unread]}>{item.sender}</Text><Text style={s.time}>{item.time}</Text></View><Text numberOfLines={1} style={[s.subject,item.unread&&s.unread]}>{item.subject}</Text><Text numberOfLines={1} style={s.preview}>{item.preview}</Text></View></Pressable>}/></View>
- {isWide&&<View style={s.reader}><View style={s.readerActions}><View style={s.toolGroup}><Pressable style={s.actionButton}><Ionicons name="archive-outline" size={20} color="#b8bbc5"/></Pressable><Pressable style={s.actionButton}><Ionicons name="moon-outline" size={20} color="#b8bbc5"/></Pressable><Pressable style={s.actionButton}><Ionicons name="trash-outline" size={20} color="#b8bbc5"/></Pressable></View><Pressable style={s.actionButton}><Ionicons name="ellipsis-horizontal" size={20} color="#b8bbc5"/></Pressable></View><ScrollView contentContainerStyle={s.readerContent}><Text style={s.readerSubject}>{selected.subject}</Text><View style={s.readerAuthor}><View style={s.largeAvatar}><Text style={s.avatarText}>{selected.avatar}</Text></View><View><Text style={s.readerSender}>{selected.sender}</Text><Text style={s.readerMeta}>to me · {selected.time}</Text></View></View><Text style={s.bodyText}>Hi there,</Text><Text style={s.bodyText}>Here is the latest update for the launch. The team has wrapped the final details and everything is ready for review.</Text><Text style={s.bodyText}>Let me know if you have any questions. I look forward to getting this over the line.</Text><Text style={s.bodyText}>Best,{"\n"}{selected.sender.split(' ')[0]}</Text><View style={s.replyRow}><Pressable style={s.replyButton}><Ionicons name="arrow-undo-outline" size={17} color="#111318"/><Text style={s.replyText}>Reply</Text></Pressable><Pressable style={s.replyIcon}><Ionicons name="arrow-redo-outline" size={18} color="#b8bbc5"/></Pressable></View></ScrollView></View>}
- </View><Modal visible={compose} transparent animationType="fade"><View style={s.modalBackdrop}><View style={s.composeModal}><View style={s.modalHeader}><Text style={s.modalTitle}>New message</Text><Pressable onPress={()=>setCompose(false)}><Ionicons name="close" size={20} color="#aeb2bd"/></Pressable></View><TextInput placeholder="Recipients" placeholderTextColor="#777b87" style={s.input}/><TextInput placeholder="Subject" placeholderTextColor="#777b87" style={s.input}/><TextInput placeholder="Write a message…" placeholderTextColor="#777b87" style={[s.input,s.composeBody]} multiline/><Pressable style={s.sendButton} onPress={()=>setCompose(false)}><Text style={s.sendText}>Send</Text><Ionicons name="arrow-up" size={16} color="#111318"/></Pressable></View></View></Modal>
- <Modal visible={command} transparent animationType="fade"><Pressable style={s.modalBackdrop} onPress={()=>setCommand(false)}><Pressable style={s.commandModal}><View style={s.commandSearch}><Ionicons name="search" size={19} color="#898d99"/><TextInput autoFocus placeholder="Type a command or search" placeholderTextColor="#777b87" style={s.commandInput}/></View><Command icon="create-outline" label="Compose new message"/><Command icon="archive-outline" label="Archive selected mail"/><Command icon="moon-outline" label="Snooze until tomorrow"/><Command icon="people-outline" label="Switch account"/></Pressable></Pressable></Modal></SafeAreaView>;
+type MailMessage = { id: string; threadId: string; sender: string; subject: string; snippet: string; date: string; unread: boolean };
+const GMAIL_READONLY = 'https://www.googleapis.com/auth/gmail.readonly';
+const redirectUri = makeRedirectUri({ scheme: 'aurora-mail' });
+
+async function gmailRequest(path: string, token: string) {
+  const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('Your Google session expired. Connect again to continue.');
+    const detail = await response.text();
+    throw new Error(`Gmail API error (${response.status}): ${detail.slice(0, 180)}`);
+  }
+  return response.json();
 }
-function Nav({icon,label,count,active}:{icon:any;label:string;count?:string;active?:boolean}){return <Pressable style={[s.nav,active&&s.navActive]}><Ionicons name={icon} size={18} color={active?'#e8e9ee':'#9498a5'}/><Text style={[s.navLabel,active&&s.navLabelActive]}>{label}</Text>{count&&<Text style={s.navCount}>{count}</Text>}</Pressable>}
-function Account({name,dot}:{name:string;dot:string}){return <View style={s.account}><View style={[s.accountDot,{backgroundColor:dot}]}/><Text style={s.accountName}>{name}</Text></View>}
-function Command({icon,label}:{icon:any;label:string}){return <Pressable style={s.commandItem}><Ionicons name={icon} size={18} color="#aeb2bd"/><Text style={s.commandLabel}>{label}</Text><Text style={s.commandHint}>↵</Text></Pressable>}
 
-const s=StyleSheet.create({root:{flex:1,backgroundColor:'#111318'},shell:{flex:1,flexDirection:'row'},sidebar:{width:224,paddingHorizontal:16,paddingVertical:18,borderRightWidth:1,borderRightColor:'#24272f'},brand:{height:42,flexDirection:'row',alignItems:'center',gap:9,paddingHorizontal:6},brandMark:{width:28,height:28,borderRadius:8,backgroundColor:'#d9ff58',alignItems:'center',justifyContent:'center'},brandMarkText:{color:'#111318',fontWeight:'900',fontSize:15},brandText:{color:'#f1f2f5',fontWeight:'800',letterSpacing:1.5,fontSize:13},compose:{height:42,marginTop:14,borderRadius:9,backgroundColor:'#d9ff58',flexDirection:'row',alignItems:'center',paddingHorizontal:12,gap:8},composeText:{color:'#111318',fontWeight:'800',flex:1},shortcut:{color:'#5d651f',fontWeight:'700',fontSize:12},nav:{height:38,borderRadius:8,flexDirection:'row',alignItems:'center',paddingHorizontal:10,gap:10,marginTop:3},navActive:{backgroundColor:'#252830'},navLabel:{color:'#9498a5',fontSize:14,flex:1},navLabelActive:{color:'#eceef3',fontWeight:'700'},navCount:{color:'#777b87',fontSize:12},accounts:{marginTop:28,paddingHorizontal:10},sectionLabel:{color:'#686b76',fontSize:10,fontWeight:'800',letterSpacing:1.2,marginBottom:10},account:{height:34,flexDirection:'row',alignItems:'center',gap:9},accountDot:{width:7,height:7,borderRadius:4},accountName:{color:'#aeb2bd',fontSize:13},inbox:{flex:1,backgroundColor:'#171920',borderRightWidth:1,borderRightColor:'#292c35'},inboxWithPane:{maxWidth:420},topbar:{height:64,paddingHorizontal:16,flexDirection:'row',alignItems:'center',gap:8,borderBottomWidth:1,borderBottomColor:'#292c35'},search:{flex:1,height:38,borderRadius:8,backgroundColor:'#20232b',flexDirection:'row',alignItems:'center',paddingHorizontal:10,gap:8},searchText:{color:'#777b87',flex:1,fontSize:13},commandKey:{color:'#777b87',backgroundColor:'#2a2d36',paddingHorizontal:6,paddingVertical:3,borderRadius:5,fontSize:11},iconButton:{width:38,height:38,alignItems:'center',justifyContent:'center',borderRadius:8},listHeader:{height:78,paddingHorizontal:18,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},title:{color:'#f1f2f5',fontSize:22,fontWeight:'800'},subtitle:{color:'#777b87',fontSize:12,marginTop:3},messageList:{paddingHorizontal:8,paddingBottom:20},messageRow:{height:105,borderRadius:10,flexDirection:'row',paddingHorizontal:10,paddingVertical:12,gap:10},messageSelected:{backgroundColor:'#262932'},avatar:{width:38,height:38,borderRadius:19,backgroundColor:'#343740',alignItems:'center',justifyContent:'center'},avatarUnread:{backgroundColor:'#d9ff58'},avatarText:{color:'#111318',fontWeight:'800',fontSize:11},messageCopy:{flex:1,minWidth:0},messageTop:{flexDirection:'row',justifyContent:'space-between'},sender:{color:'#d0d2da',fontSize:13,flex:1},subject:{color:'#c8cad2',fontSize:13,marginTop:7},preview:{color:'#777b87',fontSize:12,marginTop:5},time:{color:'#777b87',fontSize:11},unread:{color:'#f5f6f8',fontWeight:'800'},reader:{flex:1,backgroundColor:'#111318'},readerActions:{height:64,paddingHorizontal:22,flexDirection:'row',justifyContent:'space-between',alignItems:'center',borderBottomWidth:1,borderBottomColor:'#292c35'},toolGroup:{flexDirection:'row',gap:4},actionButton:{width:38,height:38,borderRadius:8,alignItems:'center',justifyContent:'center'},readerContent:{paddingHorizontal:72,paddingTop:38,paddingBottom:50},readerSubject:{color:'#f1f2f5',fontSize:25,fontWeight:'800',marginBottom:28},readerAuthor:{flexDirection:'row',alignItems:'center',gap:11,marginBottom:28},largeAvatar:{width:40,height:40,borderRadius:20,backgroundColor:'#d9ff58',alignItems:'center',justifyContent:'center'},readerSender:{color:'#eceef3',fontSize:14,fontWeight:'700'},readerMeta:{color:'#777b87',fontSize:12,marginTop:3},bodyText:{color:'#c3c6cf',fontSize:15,lineHeight:25,maxWidth:680,marginBottom:16},replyRow:{flexDirection:'row',gap:8,marginTop:18},replyButton:{height:38,backgroundColor:'#d9ff58',borderRadius:8,paddingHorizontal:14,flexDirection:'row',alignItems:'center',gap:7},replyText:{color:'#111318',fontWeight:'800'},replyIcon:{height:38,width:38,borderRadius:8,backgroundColor:'#24272f',alignItems:'center',justifyContent:'center'},modalBackdrop:{flex:1,backgroundColor:'rgba(5,6,8,.72)',alignItems:'center',justifyContent:'center'},composeModal:{width:'88%',maxWidth:680,height:520,backgroundColor:'#1b1d24',borderRadius:14,borderWidth:1,borderColor:'#343742',padding:14},modalHeader:{height:42,flexDirection:'row',justifyContent:'space-between',alignItems:'center'},modalTitle:{color:'#f1f2f5',fontWeight:'800',fontSize:16},input:{height:48,borderBottomWidth:1,borderBottomColor:'#30333d',color:'#eceef3',paddingHorizontal:8},composeBody:{flex:1,borderBottomWidth:0,textAlignVertical:'top',paddingTop:14},sendButton:{position:'absolute',right:14,bottom:14,height:38,borderRadius:8,backgroundColor:'#d9ff58',paddingHorizontal:14,flexDirection:'row',alignItems:'center',gap:8},sendText:{color:'#111318',fontWeight:'800'},commandModal:{width:'88%',maxWidth:560,backgroundColor:'#1b1d24',borderRadius:14,borderWidth:1,borderColor:'#343742',padding:8},commandSearch:{height:52,flexDirection:'row',alignItems:'center',paddingHorizontal:12,gap:8,borderBottomWidth:1,borderBottomColor:'#30333d'},commandInput:{flex:1,color:'#eceef3',fontSize:15},commandItem:{height:44,flexDirection:'row',alignItems:'center',paddingHorizontal:10,gap:10,borderRadius:8},commandLabel:{color:'#d2d4dc',flex:1,fontSize:14},commandHint:{color:'#777b87',fontSize:12}});
+async function loadInbox(token: string): Promise<MailMessage[]> {
+  const list = await gmailRequest('messages?maxResults=20&labelIds=INBOX', token);
+  const messages = await Promise.all((list.messages ?? []).map(async (item: { id: string; threadId: string }) => {
+    const data = await gmailRequest(`messages/${item.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`, token);
+    const headers: { name: string; value: string }[] = data.payload?.headers ?? [];
+    const header = (name: string) => headers.find(h => h.name.toLowerCase() === name.toLowerCase())?.value ?? '';
+    return { id: item.id, threadId: item.threadId, sender: header('From'), subject: header('Subject') || '(no subject)', snippet: data.snippet ?? '', date: header('Date'), unread: (data.labelIds ?? []).includes('UNREAD') };
+  }));
+  return messages;
+}
+
+export default function App() {
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    scopes: [GMAIL_READONLY],
+    redirectUri,
+  });
+  const [token, setToken] = useState<string | null>(null);
+  const [mail, setMail] = useState<MailMessage[]>([]);
+  const [account, setAccount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [selected, setSelected] = useState<MailMessage | null>(null);
+
+  const syncInbox = useCallback(async (accessToken: string) => {
+    setBusy(true); setError('');
+    try {
+      const [profile, inbox] = await Promise.all([
+        gmailRequest('profile', accessToken),
+        loadInbox(accessToken),
+      ]);
+      setAccount(profile.emailAddress ?? 'Gmail'); setMail(inbox);
+      if (!selected && inbox.length) setSelected(inbox[0]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load Gmail.');
+    } finally { setBusy(false); }
+  }, [selected]);
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const accessToken = response.authentication?.accessToken;
+      if (accessToken) { setToken(accessToken); void syncInbox(accessToken); }
+      else setError('Google did not return an access token. Please try connecting again.');
+    } else if (response?.type === 'error') setError('Google sign-in failed. Check your OAuth client configuration and try again.');
+  }, [response, syncInbox]);
+
+  const connect = async () => { setError(''); try { await promptAsync(); } catch { setError('Could not open Google sign-in. Please try again.'); } };
+  const disconnect = () => { setToken(null); setMail([]); setSelected(null); setAccount(''); setError(''); };
+
+  return <SafeAreaView style={s.root}><StatusBar barStyle="light-content"/><View style={s.header}>
+    <View style={s.brand}><View style={s.mark}><Text style={s.markText}>A</Text></View><Text style={s.brandText}>AURORA</Text></View>
+    <Pressable style={s.headerAction} onPress={() => token ? void syncInbox(token) : void connect()} disabled={!request || busy}>
+      {busy ? <ActivityIndicator size="small" color="#d9ff58"/> : <Ionicons name={token ? 'refresh-outline' : 'logo-google'} size={18} color="#d9ff58"/>}
+    </Pressable>
+  </View>
+  {!token ? <View style={s.welcome}><View style={s.heroIcon}><Ionicons name="mail-open-outline" size={30} color="#d9ff58"/></View><Text style={s.title}>Your inbox, in focus.</Text><Text style={s.description}>Connect Gmail to view your latest messages in AURORA. Access is read-only; we never ask for your Google password.</Text><Pressable style={[s.connectButton, (!request || busy) && s.disabled]} onPress={connect} disabled={!request || busy}><Ionicons name="logo-google" size={18} color="#111318"/><Text style={s.connectLabel}>Continue with Google</Text></Pressable><Text style={s.note}>Gmail read-only access · You can disconnect anytime</Text>{error ? <Text style={s.error}>{error}</Text> : null}</View> : <View style={s.content}>
+    <View style={s.accountRow}><View style={s.accountInfo}><View style={s.onlineDot}/><View><Text style={s.accountEmail}>{account}</Text><Text style={s.accountCaption}>GMAIL · INBOX</Text></View></View><Pressable onPress={disconnect} style={s.disconnect}><Text style={s.disconnectText}>Disconnect</Text></Pressable></View>
+    {error ? <Text style={s.error}>{error}</Text> : null}
+    <View style={s.main}>{!selected ? <View style={s.empty}><Text style={s.emptyTitle}>Inbox is empty</Text></View> : <View style={s.reader}><Text style={s.subject}>{selected.subject}</Text><Text style={s.from}>{selected.sender}</Text><Text style={s.date}>{selected.date}</Text><Text style={s.body}>{selected.snippet}</Text></View>}
+      <FlatList style={s.list} data={mail} keyExtractor={item => item.id} ListEmptyComponent={busy ? <ActivityIndicator color="#d9ff58" style={{marginTop:30}}/> : null} renderItem={({item}) => <Pressable onPress={() => setSelected(item)} style={[s.row, selected?.id === item.id && s.rowSelected]}><View style={[s.unreadDot, !item.unread && s.readDot]}/><View style={s.messageCopy}><Text numberOfLines={1} style={[s.sender, item.unread && s.bold]}>{item.sender}</Text><Text numberOfLines={1} style={[s.messageSubject, item.unread && s.bold]}>{item.subject}</Text><Text numberOfLines={2} style={s.snippet}>{item.snippet}</Text></View></Pressable>}/>
+    </View>
+  </View>}
+  </SafeAreaView>;
+}
+
+const s=StyleSheet.create({root:{flex:1,backgroundColor:'#111318'},header:{height:62,paddingHorizontal:20,flexDirection:'row',alignItems:'center',justifyContent:'space-between',borderBottomWidth:1,borderBottomColor:'#292c35'},brand:{flexDirection:'row',alignItems:'center',gap:9},mark:{width:28,height:28,borderRadius:8,backgroundColor:'#d9ff58',alignItems:'center',justifyContent:'center'},markText:{color:'#111318',fontSize:15,fontWeight:'900'},brandText:{color:'#f1f2f5',fontWeight:'800',letterSpacing:1.5,fontSize:13},headerAction:{width:40,height:40,alignItems:'center',justifyContent:'center'},welcome:{flex:1,alignItems:'center',justifyContent:'center',paddingHorizontal:30},heroIcon:{width:62,height:62,borderRadius:20,backgroundColor:'#252830',alignItems:'center',justifyContent:'center',marginBottom:24},title:{color:'#f1f2f5',fontSize:27,fontWeight:'800',textAlign:'center'},description:{color:'#aeb2bd',fontSize:15,lineHeight:23,textAlign:'center',maxWidth:440,marginTop:12},connectButton:{height:48,paddingHorizontal:18,borderRadius:9,backgroundColor:'#d9ff58',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10,marginTop:26},connectLabel:{color:'#111318',fontWeight:'800',fontSize:14},disabled:{opacity:.5},note:{color:'#777b87',fontSize:12,marginTop:15,textAlign:'center'},error:{color:'#ff8a8a',fontSize:13,margin:12,textAlign:'center'},content:{flex:1},accountRow:{minHeight:70,paddingHorizontal:20,flexDirection:'row',alignItems:'center',justifyContent:'space-between',borderBottomWidth:1,borderBottomColor:'#292c35'},accountInfo:{flexDirection:'row',alignItems:'center',gap:10},onlineDot:{width:8,height:8,borderRadius:4,backgroundColor:'#d9ff58'},accountEmail:{color:'#eceef3',fontSize:13,fontWeight:'700'},accountCaption:{color:'#777b87',fontSize:10,letterSpacing:1,marginTop:4},disconnect:{padding:8},disconnectText:{color:'#aeb2bd',fontSize:12},main:{flex:1,flexDirection:'row'},list:{flex:1,borderRightWidth:1,borderRightColor:'#292c35'},row:{minHeight:92,paddingHorizontal:14,paddingVertical:13,flexDirection:'row',gap:9,borderBottomWidth:1,borderBottomColor:'#24272f'},rowSelected:{backgroundColor:'#252830'},unreadDot:{width:7,height:7,borderRadius:4,backgroundColor:'#d9ff58',marginTop:5},readDot:{backgroundColor:'transparent'},messageCopy:{flex:1},sender:{color:'#c6c8d0',fontSize:13},bold:{fontWeight:'800',color:'#f1f2f5'},messageSubject:{color:'#c6c8d0',fontSize:13,marginTop:5},snippet:{color:'#777b87',fontSize:12,marginTop:4,lineHeight:17},reader:{flex:1,paddingHorizontal:24,paddingTop:30},subject:{color:'#f1f2f5',fontSize:22,fontWeight:'800'},from:{color:'#d0d2da',fontSize:13,marginTop:22},date:{color:'#777b87',fontSize:11,marginTop:5},body:{color:'#c3c6cf',fontSize:15,lineHeight:24,marginTop:25},empty:{flex:1,alignItems:'center',justifyContent:'center'},emptyTitle:{color:'#aeb2bd',fontSize:16}});
