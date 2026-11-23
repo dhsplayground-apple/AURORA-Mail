@@ -6,8 +6,10 @@
     "version": "2.0.0",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
-    "splash": { "resizeMode": "contain", "backgroundColor": "#111318" },
-    "ios": { "supportsTablet": true },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": { "CADisableMinimumFrameDurationOnPhone": true }
+    },
     "android": { "adaptiveIcon": { "backgroundColor": "#111318" } },
     "plugins": ["expo-secure-store"]
   }
